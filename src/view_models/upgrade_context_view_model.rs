@@ -56,8 +56,7 @@ impl UpgradeContextViewModel {
         current_upgrade_context: Signal<UpgradeContext>,
         character_name: String,
     ) {
-        let probability_context =
-            api::lib::fetch_probability_context(character_name).await.unwrap();
+        let probability_context = api::fetch_probability_context(character_name).await.unwrap();
         let mut upgrade_context = current_upgrade_context.get_clone_untracked();
 
         upgrade_context.handicraft = Some(probability_context.handicraft);
