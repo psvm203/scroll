@@ -89,6 +89,7 @@ pub struct UpgradeContext {
     pub equipment_level: Option<u32>,
     pub upgradeable_count: Option<u32>,
     pub trace_probability: Option<u32>,
+    pub trace_required_base: Option<u32>,
     pub trace_required: Option<u32>,
     pub trace_price: Option<u32>,
     pub innocent_scroll_price: Option<u32>,

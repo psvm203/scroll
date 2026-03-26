@@ -32,6 +32,7 @@ impl UpgradeContextViewModel {
     pub fn new() -> Self {
         let mut stored_upgrade_context: UpgradeContext =
             LocalStorage::get(constants::UPGRADE_CONTEXT_STORAGE_KEY).unwrap_or_default();
+        Self::normalize_trace_required_base(&mut stored_upgrade_context);
         Self::refresh_trace_required(&mut stored_upgrade_context);
         let selected_trace_probability = stored_upgrade_context.trace_probability;
 
@@ -214,7 +215,12 @@ impl UpgradeContextViewModel {
                 && (min..=max).contains(&value)
             {
                 let mut upgrade_context = current_upgrade_context.get_clone_untracked();
-                upgrade_context.trace_required = Some(value);
+                upgrade_context.trace_required_base = Some(if upgrade_context.is_trace_half_price {
+                    value.saturating_mul(2)
+                } else {
+                    value
+                });
+                Self::apply_trace_half_price(&mut upgrade_context);
                 upgrade_context.equipment_slot = None;
                 upgrade_context.equipment_level = None;
                 upgrade_context.upgradeable_count = None;
@@ -260,6 +266,7 @@ impl UpgradeContextViewModel {
         Callback::from(move |_event: Event| {
             let mut upgrade_context = current_upgrade_context.get_clone_untracked();
             upgrade_context.is_trace_half_price = !upgrade_context.is_trace_half_price;
+            Self::apply_trace_half_price(&mut upgrade_context);
             current_upgrade_context.set(upgrade_context.clone());
             Self::persist_upgrade_context(&upgrade_context);
         })
@@ -360,13 +367,39 @@ impl UpgradeContextViewModel {
         };
         let Some(trace_probability) = upgrade_context.trace_probability else {
             upgrade_context.trace_required = None;
+            upgrade_context.trace_required_base = None;
             return;
         };
 
-        upgrade_context.trace_required = traces::calculate_trace_required_per_upgrade(
+        upgrade_context.trace_required_base = traces::calculate_trace_required_per_upgrade(
             equipment_slot,
             equipment_level,
             trace_probability,
         );
+        Self::apply_trace_half_price(upgrade_context);
+    }
+
+    fn apply_trace_half_price(upgrade_context: &mut UpgradeContext) {
+        upgrade_context.trace_required = upgrade_context.trace_required_base.map(|base| {
+            if upgrade_context.is_trace_half_price {
+                base / 2
+            } else {
+                base
+            }
+        });
+    }
+
+    fn normalize_trace_required_base(upgrade_context: &mut UpgradeContext) {
+        if upgrade_context.trace_required_base.is_some() {
+            return;
+        }
+
+        upgrade_context.trace_required_base = upgrade_context.trace_required.map(|value| {
+            if upgrade_context.is_trace_half_price {
+                value.saturating_mul(2)
+            } else {
+                value
+            }
+        });
     }
 }
