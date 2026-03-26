@@ -40,6 +40,7 @@ fn fieldset(legend: &'static str, fields: Vec<View>) -> View {
 
 fn probability_fields() -> Vec<View> {
     let view_model = use_context::<UpgradeContextViewModel>();
+    let disable_probability_inputs = view_model.is_loading.get();
 
     let handicraft = view_model.get_field(|context| context.handicraft);
     let enhance_mastery = view_model.get_field(|context| context.enhance_mastery);
@@ -56,15 +57,15 @@ fn probability_fields() -> Vec<View> {
     [
         CharacterSearch(),
         view! {
-            (field(&spec_collection::HANDICRAFT, handicraft.clone(), handicraft_callback.clone()))
+            (field(&spec_collection::HANDICRAFT, handicraft.clone(), handicraft_callback.clone(), disable_probability_inputs))
             (handicraft_tooltip)
         },
         view! {
-            (field(&spec_collection::ENHANCE_MASTERY, enhance_mastery.clone(), enhance_mastery_callback.clone()))
+            (field(&spec_collection::ENHANCE_MASTERY, enhance_mastery.clone(), enhance_mastery_callback.clone(), disable_probability_inputs))
             (enhance_mastery_tooltip)
         },
         view! {
-            (field(&spec_collection::UPGRADE_SALVATION, upgrade_salvation.clone(), upgrade_salvation_callback.clone()))
+            (field(&spec_collection::UPGRADE_SALVATION, upgrade_salvation.clone(), upgrade_salvation_callback.clone(), disable_probability_inputs))
             (upgrade_salvation_tooltip)
         },
     ]
@@ -85,9 +86,24 @@ fn equipment_fields() -> Vec<View> {
     let trace_required_callback = view_model.trace_required_change_callback();
 
     [
-        field(&spec_collection::EQUIPMENT_LEVEL, equipment_level, equipment_level_callback),
-        field(&spec_collection::UPGRADEABLE_COUNT, upgradeable_count, upgradeable_count_callback),
-        field(&spec_collection::TRACE_REQUIRED, trace_required, trace_required_callback),
+        field(
+            &spec_collection::EQUIPMENT_LEVEL,
+            equipment_level,
+            equipment_level_callback,
+            false,
+        ),
+        field(
+            &spec_collection::UPGRADEABLE_COUNT,
+            upgradeable_count,
+            upgradeable_count_callback,
+            false,
+        ),
+        field(
+            &spec_collection::TRACE_REQUIRED,
+            trace_required,
+            trace_required_callback,
+            false,
+        ),
     ]
     .into_iter()
     .collect::<Vec<View>>()
@@ -104,7 +120,7 @@ fn price_fields() -> Vec<View> {
     let trace_price_tooltip = view_model.trace_price_tooltip();
 
     [view! {
-        (field(&spec_collection::TRACE_PRICE, trace_price.clone(), trace_price_callback.clone()))
+        (field(&spec_collection::TRACE_PRICE, trace_price.clone(), trace_price_callback.clone(), false))
         (trace_price_tooltip)
     }]
     .into_iter()
@@ -116,26 +132,46 @@ fn price_fields() -> Vec<View> {
 fn CharacterSearch() -> View {
     let view_model = use_context::<UpgradeContextViewModel>();
     let onchange = view_model.character_search_callback();
+    let is_loading = view_model.is_loading.get();
+    let api_error_message = view_model.api_error_message.get_clone();
 
     view! {
-        label(class="input") {
-            svg(class="h-[1em] opacity-50", xmlns="http://www.w3.org/2000/svg", viewBox="0 0 24 24") {
-                g(stroke-linejoin="round",
-                stroke-linecap="round",
-                stroke-width="2.5",
-                fill="none",
-                stroke="currentColor") {
-                    circle(cx="11", cy="11", r="8") {}
-                    path(d="m21 21-4.3-4.3") {}
+        div(class="space-y-2") {
+            label(class="input") {
+                svg(class="h-[1em] opacity-50", xmlns="http://www.w3.org/2000/svg", viewBox="0 0 24 24") {
+                    g(stroke-linejoin="round",
+                    stroke-linecap="round",
+                    stroke-width="2.5",
+                    fill="none",
+                    stroke="currentColor") {
+                        circle(cx="11", cy="11", r="8") {}
+                        path(d="m21 21-4.3-4.3") {}
+                    }
                 }
+                input(
+                    r#type="search",
+                    class="grow",
+                    placeholder="캐릭터 닉네임 검색",
+                    on:change=onchange,
+                    disabled=is_loading
+                ) {}
+                kbd(class="kbd kbd-sm") { "↲" }
             }
-            input(r#type="search", class="grow", placeholder="캐릭터 닉네임 검색", on:change=onchange) {}
-            kbd(class="kbd kbd-sm") { "↲" }
+            (if is_loading {
+                view! { progress(class="progress progress-primary w-full") {} }
+            } else {
+                view! {}
+            })
+            (if let Some(message) = api_error_message {
+                view! { p(class="text-error text-sm") { (message) } }
+            } else {
+                view! {}
+            })
         }
     }
 }
 
-fn field(spec: &Spec, value: Option<String>, callback: Callback) -> View {
+fn field(spec: &Spec, value: Option<String>, callback: Callback, disabled: bool) -> View {
     let label = spec.label;
     let placeholder = spec.placeholder;
     let min = spec.min.to_string();
@@ -152,7 +188,8 @@ fn field(spec: &Spec, value: Option<String>, callback: Callback) -> View {
             value=value,
             min=min,
             max=max,
-            on:change=callback
+            on:change=callback,
+            disabled=disabled
         ) {}
     }
 }
