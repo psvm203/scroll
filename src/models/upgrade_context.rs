@@ -17,16 +17,16 @@ pub mod spec_collection {
 
     pub const ENHANCE_MASTERY: Spec = Spec {
         label: "강화의 달인",
-        placeholder: "0 ~ 4",
+        placeholder: "0 ~ 1",
         min: 0,
-        max: 4,
+        max: 1,
     };
 
     pub const UPGRADE_SALVATION: Spec = Spec {
         label: "실패를 두려워 않는",
-        placeholder: "0 ~ 4",
+        placeholder: "0 ~ 1",
         min: 0,
-        max: 4,
+        max: 1,
     };
 
     pub const EQUIPMENT_LEVEL: Spec = Spec {
@@ -99,18 +99,18 @@ pub struct UpgradeContext {
 }
 
 pub fn handicraft_tooltip(handicraft_level: u32) -> String {
-    format!(
-        "성공 확률 {}%p 증가",
-        handicraft_probability_bonus(handicraft_level)
-    )
+    let bonus = handicraft_probability_bonus(handicraft_level);
+    format!("성공 확률 {bonus}%p 증가")
 }
 
 pub fn enhance_mastery_tooltip(enhance_mastery_level: u32) -> String {
-    format!("성공 확률 {enhance_mastery_level}%p 증가")
+	let bonus = enhance_mastery_probability_bonus(enhance_mastery_level);
+    format!("성공 확률 {bonus}%p 증가")
 }
 
 pub fn upgrade_salvation_tooltip(upgrade_salvation_level: u32) -> String {
-    format!("실패 시 {upgrade_salvation_level}% 확률로 횟수 차감 방지")
+	let salvation = upgrade_salvation_rate(upgrade_salvation_level);
+    format!("실패 시 {salvation}% 확률로 횟수 차감 방지")
 }
 
 pub fn trace_price_tooltip(trace_price: u32) -> String {
@@ -122,5 +122,9 @@ pub fn handicraft_probability_bonus(handicraft_level: u32) -> f64 {
 }
 
 pub fn enhance_mastery_probability_bonus(enhance_mastery_level: u32) -> f64 {
-    f64::from(enhance_mastery_level)
+    f64::from(enhance_mastery_level * 4)
+}
+
+pub fn upgrade_salvation_rate(upgrade_salvation_level: u32) -> f64 {
+    f64::from(upgrade_salvation_level * 4)
 }

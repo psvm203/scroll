@@ -2,8 +2,8 @@ use maplestory::prelude::*;
 
 mod constants {
     pub const API_ORIGIN: &str = "https://nexon-open-api-proxy.psvm203.workers.dev";
-    pub const ENHANCE_MASTERY: &str = "강화의 달인";
-    pub const UPGRADE_SALVATION: &str = "실패를 두려워 않는";
+    pub const ENHANCE_MASTERY: &str = "주문서 강화의 달인";
+    pub const UPGRADE_SALVATION: &str = "주문서 강화의 장인";
 }
 
 pub struct ProbabilityContext {
