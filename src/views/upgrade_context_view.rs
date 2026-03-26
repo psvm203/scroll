@@ -21,7 +21,7 @@ pub fn UpgradeContextView() -> View {
 #[component]
 fn Fieldsets() -> View {
     view! {
-        div(class="grid grid-cols-6 gap-48 p-16") {
+        div(class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 xl:grid-cols-3") {
             (fieldset(constants::POTENTIAL_LEGEND, probability_fields()))
             (fieldset(constants::EQUIPMENT_LEGEND, equipment_fields()))
             (fieldset(constants::PRICE_LEGEND, price_fields()))
@@ -31,7 +31,7 @@ fn Fieldsets() -> View {
 
 fn fieldset(legend: &'static str, fields: Vec<View>) -> View {
     view! {
-        fieldset(class="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4") {
+        fieldset(class="fieldset bg-base-200 border-base-300 rounded-box w-full min-w-0 border p-4") {
             legend(class="fieldset-legend") { (legend) }
             (fields)
         }
@@ -137,7 +137,7 @@ fn CharacterSearch() -> View {
 
     view! {
         div(class="space-y-2") {
-            label(class="input") {
+            label(class="input w-full") {
                 svg(class="h-[1em] opacity-50", xmlns="http://www.w3.org/2000/svg", viewBox="0 0 24 24") {
                     g(stroke-linejoin="round",
                     stroke-linecap="round",
@@ -182,7 +182,7 @@ fn field(spec: &Spec, value: Option<String>, callback: Callback, disabled: bool)
         input(
             r#type="number",
             id=label,
-            class="input validator",
+            class="input validator w-full",
             required=true,
             placeholder=placeholder,
             value=value,

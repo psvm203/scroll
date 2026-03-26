@@ -16,7 +16,8 @@ pub fn ThemeView() -> View {
 #[component]
 fn ThemeController() -> View {
     view! {
-        div(class="dropdown mb-72 absolute right-48") {
+        div(class="flex w-full justify-end") {
+            div(class="dropdown") {
             div(tabindex="0", role="button", class="btn m-1") {
                 (constants::THEME_LABEL)
                 svg(
@@ -35,6 +36,7 @@ fn ThemeController() -> View {
             ) {
                 (theme_options)
             }
+        }
         }
     }
 }
