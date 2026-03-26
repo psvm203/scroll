@@ -114,15 +114,55 @@ fn price_fields() -> Vec<View> {
     let view_model = use_context::<UpgradeContextViewModel>();
 
     let trace_price = view_model.get_field(|context| context.trace_price);
+    let innocent_scroll_price = view_model.get_field(|context| context.innocent_scroll_price);
+    let ark_innocent_scroll_price =
+        view_model.get_field(|context| context.ark_innocent_scroll_price);
+    let white_scroll_price = view_model.get_field(|context| context.white_scroll_price);
 
     let trace_price_callback = view_model.trace_price_change_callback();
+    let innocent_scroll_price_callback = view_model.innocent_scroll_price_change_callback();
+    let ark_innocent_scroll_price_callback =
+        view_model.ark_innocent_scroll_price_change_callback();
+    let white_scroll_price_callback = view_model.white_scroll_price_change_callback();
 
     let trace_price_tooltip = view_model.trace_price_tooltip();
+    let innocent_scroll_price_tooltip = view_model.innocent_scroll_price_tooltip();
+    let ark_innocent_scroll_price_tooltip = view_model.ark_innocent_scroll_price_tooltip();
+    let white_scroll_price_tooltip = view_model.white_scroll_price_tooltip();
 
-    [view! {
-        (field(&spec_collection::TRACE_PRICE, trace_price.clone(), trace_price_callback.clone(), false))
-        (trace_price_tooltip)
-    }]
+    [
+        view! {
+            (field(&spec_collection::TRACE_PRICE, trace_price.clone(), trace_price_callback.clone(), false))
+            (trace_price_tooltip)
+        },
+        view! {
+            (field(
+                &spec_collection::INNOCENT_SCROLL_PRICE,
+                innocent_scroll_price.clone(),
+                innocent_scroll_price_callback.clone(),
+                false
+            ))
+            (innocent_scroll_price_tooltip)
+        },
+        view! {
+            (field(
+                &spec_collection::ARK_INNOCENT_SCROLL_PRICE,
+                ark_innocent_scroll_price.clone(),
+                ark_innocent_scroll_price_callback.clone(),
+                false
+            ))
+            (ark_innocent_scroll_price_tooltip)
+        },
+        view! {
+            (field(
+                &spec_collection::WHITE_SCROLL_PRICE,
+                white_scroll_price.clone(),
+                white_scroll_price_callback.clone(),
+                false
+            ))
+            (white_scroll_price_tooltip)
+        },
+    ]
     .into_iter()
     .collect::<Vec<View>>()
     .join(|| view! { div(class="divider") })

@@ -56,6 +56,27 @@ pub mod spec_collection {
         min: 0,
         max: 10000,
     };
+
+    pub const INNOCENT_SCROLL_PRICE: Spec = Spec {
+        label: "이노센트 주문서 시세",
+        placeholder: "0",
+        min: 0,
+        max: 1_000_000_000,
+    };
+
+    pub const ARK_INNOCENT_SCROLL_PRICE: Spec = Spec {
+        label: "아크 이노센트 주문서 시세",
+        placeholder: "0",
+        min: 0,
+        max: 1_000_000_000,
+    };
+
+    pub const WHITE_SCROLL_PRICE: Spec = Spec {
+        label: "순백의 주문서 시세",
+        placeholder: "0",
+        min: 0,
+        max: 1_000_000_000,
+    };
 }
 
 #[derive(Clone, Default, Deserialize, Serialize)]
@@ -67,6 +88,9 @@ pub struct UpgradeContext {
     pub upgradeable_count: Option<u32>,
     pub trace_required: Option<u32>,
     pub trace_price: Option<u32>,
+    pub innocent_scroll_price: Option<u32>,
+    pub ark_innocent_scroll_price: Option<u32>,
+    pub white_scroll_price: Option<u32>,
 }
 
 pub fn handicraft_tooltip(handicraft_level: u32) -> String {

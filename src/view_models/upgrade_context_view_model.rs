@@ -170,6 +170,24 @@ impl UpgradeContextViewModel {
         })
     }
 
+    pub fn innocent_scroll_price_change_callback(&self) -> Callback {
+        self.create_callback(&spec_collection::INNOCENT_SCROLL_PRICE, |context, value| {
+            context.innocent_scroll_price = value;
+        })
+    }
+
+    pub fn ark_innocent_scroll_price_change_callback(&self) -> Callback {
+        self.create_callback(&spec_collection::ARK_INNOCENT_SCROLL_PRICE, |context, value| {
+            context.ark_innocent_scroll_price = value;
+        })
+    }
+
+    pub fn white_scroll_price_change_callback(&self) -> Callback {
+        self.create_callback(&spec_collection::WHITE_SCROLL_PRICE, |context, value| {
+            context.white_scroll_price = value;
+        })
+    }
+
     pub fn handicraft_tooltip(&self) -> String {
         self.create_tooltip(|context| context.handicraft, upgrade_context::handicraft_tooltip)
     }
@@ -190,6 +208,27 @@ impl UpgradeContextViewModel {
 
     pub fn trace_price_tooltip(&self) -> String {
         self.create_tooltip(|context| context.trace_price, upgrade_context::trace_price_tooltip)
+    }
+
+    pub fn innocent_scroll_price_tooltip(&self) -> String {
+        self.create_tooltip(
+            |context| context.innocent_scroll_price,
+            upgrade_context::trace_price_tooltip,
+        )
+    }
+
+    pub fn ark_innocent_scroll_price_tooltip(&self) -> String {
+        self.create_tooltip(
+            |context| context.ark_innocent_scroll_price,
+            upgrade_context::trace_price_tooltip,
+        )
+    }
+
+    pub fn white_scroll_price_tooltip(&self) -> String {
+        self.create_tooltip(
+            |context| context.white_scroll_price,
+            upgrade_context::trace_price_tooltip,
+        )
     }
 
     fn persist_upgrade_context(upgrade_context: &UpgradeContext) {
