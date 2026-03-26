@@ -71,12 +71,14 @@ fn probability_fields() -> Vec<View> {
             (field(&spec_collection::UPGRADE_SALVATION, upgrade_salvation.clone(), upgrade_salvation_callback.clone(), disable_probability_inputs))
             (upgrade_salvation_tooltip)
         }},
+        view! { div(class="mt-4") { (FeverTimeToggle()) }},
     ]
 }
 
 fn equipment_fields() -> Vec<View> {
     let view_model = use_context::<UpgradeContextViewModel>();
 
+    let is_trace_half_price = view_model.is_trace_half_price();
     let equipment_slot = view_model.equipment_slot();
     let equipment_level = view_model.get_field(|context| context.equipment_level);
     let upgradeable_count = view_model.get_field(|context| context.upgradeable_count);
@@ -85,31 +87,109 @@ fn equipment_fields() -> Vec<View> {
     let equipment_slot_callback = view_model.equipment_slot_change_callback();
     let equipment_level_callback = view_model.equipment_level_change_callback();
     let upgradeable_count_callback = view_model.upgradeable_count_change_callback();
+    let trace_required_callback = view_model.trace_required_change_callback();
 
-    [
+    vec![
         EquipmentSearch(),
+        view! { div(class="divider") },
         equipment_slot_field(equipment_slot, equipment_slot_callback),
-        field(
-            &spec_collection::EQUIPMENT_LEVEL,
-            equipment_level,
-            equipment_level_callback,
-            false,
-        ),
-        field(
-            &spec_collection::UPGRADEABLE_COUNT,
-            upgradeable_count,
-            upgradeable_count_callback,
-            false,
-        ),
-        TraceProbabilityButtons(),
-        output_field(
-            &spec_collection::TRACE_REQUIRED,
-            trace_required,
-        ),
+        view! { div(class="mt-4") {
+            (field(
+                &spec_collection::EQUIPMENT_LEVEL,
+                equipment_level.clone(),
+                equipment_level_callback.clone(),
+                false,
+            ))
+        }},
+        view! { div(class="mt-4") {
+            (field(
+                &spec_collection::UPGRADEABLE_COUNT,
+                upgradeable_count.clone(),
+                upgradeable_count_callback.clone(),
+                false,
+            ))
+        }},
+        view! { div(class="divider") },
+        view! { div(class="mt-4") { (TraceProbabilityButtons()) }},
+        view! { div(class="mt-4") {
+            (trace_required_field(
+                trace_required.clone(),
+                trace_required_callback.clone(),
+                is_trace_half_price,
+            ))
+        }},
+        view! { div(class="mt-4") { (TraceHalfPriceToggle()) }},
     ]
-    .into_iter()
-    .collect::<Vec<View>>()
-    .join(|| view! { div(class="divider") })
+}
+
+#[component]
+fn FeverTimeToggle() -> View {
+    let enabled = create_signal(false);
+    let onclick = move |_event| {
+        enabled.set(!enabled.get_clone_untracked());
+    };
+
+    view! {
+        div(class="flex items-center justify-between") {
+            label(class="label p-0") { "피버타임" }
+            button(
+                r#type="button",
+                class=if enabled.get() { "btn btn-sm btn-primary" } else { "btn btn-sm btn-outline" },
+                on:click=onclick
+            ) {
+                (if enabled.get() { "ON" } else { "OFF" })
+            }
+        }
+    }
+}
+
+#[component]
+fn TraceHalfPriceToggle() -> View {
+    let view_model = use_context::<UpgradeContextViewModel>();
+    let enabled = view_model.is_trace_half_price();
+    let onclick = view_model.toggle_trace_half_price_callback();
+
+    view! {
+        div(class="flex items-center justify-between") {
+            label(class="label p-0") { "주문의 흔적 반값" }
+            button(
+                r#type="button",
+                class=if enabled { "btn btn-sm btn-primary" } else { "btn btn-sm btn-outline" },
+                on:click=onclick
+            ) {
+                (if enabled { "ON" } else { "OFF" })
+            }
+        }
+    }
+}
+
+fn trace_required_field(value: Option<String>, callback: Callback, is_half_price: bool) -> View {
+    let placeholder = spec_collection::TRACE_REQUIRED.placeholder;
+    let min = spec_collection::TRACE_REQUIRED.min.to_string();
+    let max = spec_collection::TRACE_REQUIRED.max.to_string();
+
+    view! {
+        label(class="label", r#for="trace-required") {
+            "주문의 흔적 필요 수 "
+            (if is_half_price {
+                view! { span(class="text-warning font-semibold") { "(반값 적용)" } }
+            } else {
+                view! { span { "(반값 미적용)" } }
+            })
+        }
+        input(
+            r#type="number",
+            id="trace-required",
+            class="input validator w-full",
+            required=true,
+            placeholder=placeholder,
+            value=value,
+            min=min,
+            max=max,
+            on:change=callback,
+            disabled=false
+        ) {}
+    }
 }
 
 fn price_fields() -> Vec<View> {
@@ -319,29 +399,6 @@ fn field(spec: &Spec, value: Option<String>, callback: Callback, disabled: bool)
             max=max,
             on:change=callback,
             disabled=disabled
-        ) {}
-    }
-}
-
-fn output_field(spec: &Spec, value: Option<String>) -> View {
-    let label = spec.label;
-    let placeholder = spec.placeholder;
-    let min = spec.min.to_string();
-    let max = spec.max.to_string();
-
-    view! {
-        label(class="label", r#for=label) { (label) }
-        input(
-            r#type="number",
-            id=label,
-            class="input validator w-full",
-            required=true,
-            placeholder=placeholder,
-            value=value,
-            min=min,
-            max=max,
-            readonly=true,
-            disabled=true
         ) {}
     }
 }
