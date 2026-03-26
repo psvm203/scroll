@@ -15,14 +15,12 @@ pub fn is_supported_equipment_slot(equipment_slot: &str) -> bool {
     )
 }
 
-pub fn calculate_total_trace_required(
+pub fn calculate_trace_required_per_upgrade(
     equipment_slot: &str,
     equipment_level: u32,
-    upgradeable_count: u32,
     trace_probability: u32,
 ) -> Option<u32> {
     trace_required_per_slot(equipment_slot, equipment_level, trace_probability)
-        .map(|per_slot| per_slot.saturating_mul(upgradeable_count))
 }
 
 fn trace_required_per_slot(

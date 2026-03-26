@@ -321,19 +321,14 @@ impl UpgradeContextViewModel {
             upgrade_context.trace_required = None;
             return;
         };
-        let Some(upgradeable_count) = upgrade_context.upgradeable_count else {
-            upgrade_context.trace_required = None;
-            return;
-        };
         let Some(trace_probability) = upgrade_context.trace_probability else {
             upgrade_context.trace_required = None;
             return;
         };
 
-        upgrade_context.trace_required = traces::calculate_total_trace_required(
+        upgrade_context.trace_required = traces::calculate_trace_required_per_upgrade(
             equipment_slot,
             equipment_level,
-            upgradeable_count,
             trace_probability,
         );
     }
