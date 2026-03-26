@@ -56,8 +56,9 @@ fn probability_fields() -> Vec<View> {
     let enhance_mastery_tooltip = view_model.enhance_mastery_tooltip();
     let upgrade_salvation_tooltip = view_model.upgrade_salvation_tooltip();
 
-    [
+    vec![
         CharacterSearch(),
+        view! { div(class="divider") },
         view! {
             (field(&spec_collection::HANDICRAFT, handicraft.clone(), handicraft_callback.clone(), disable_probability_inputs))
             (handicraft_tooltip)
@@ -71,9 +72,6 @@ fn probability_fields() -> Vec<View> {
             (upgrade_salvation_tooltip)
         },
     ]
-    .into_iter()
-    .collect::<Vec<View>>()
-    .join(|| view! { div(class="divider") })
 }
 
 fn equipment_fields() -> Vec<View> {
@@ -188,7 +186,7 @@ fn equipment_slot_field(value: Option<String>, callback: Callback) -> View {
             option(value=traces::EQUIPMENT_SLOT_ARMOR, selected=selected_armor) { "방어구" }
             option(value=traces::EQUIPMENT_SLOT_GLOVE, selected=selected_glove) { "장갑" }
             option(value=traces::EQUIPMENT_SLOT_ACCESSORY, selected=selected_accessory) { "장신구" }
-            option(value=traces::EQUIPMENT_SLOT_HEART, selected=selected_heart) { "하트" }
+            option(value=traces::EQUIPMENT_SLOT_HEART, selected=selected_heart) { "기계 심장" }
         }
     }
 }

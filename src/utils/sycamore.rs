@@ -3,7 +3,7 @@ use sycamore::{
     prelude::*,
     web::events::{EventDescriptor, EventHandler},
 };
-use web_sys::{Event, HtmlInputElement, wasm_bindgen::JsCast};
+use web_sys::{Event, HtmlInputElement, HtmlSelectElement, wasm_bindgen::JsCast};
 
 pub trait ViewVecExt {
     fn join<F>(self, separator_fn: F) -> Vec<View>
@@ -75,8 +75,16 @@ pub trait EventValue {
 impl EventValue for Event {
     fn value(&self) -> Option<String> {
         let target = self.target()?;
-        let input = target.dyn_into::<HtmlInputElement>().ok()?;
-        Some(input.value())
+
+        if let Ok(input) = target.clone().dyn_into::<HtmlInputElement>() {
+            return Some(input.value());
+        }
+
+        if let Ok(select) = target.dyn_into::<HtmlSelectElement>() {
+            return Some(select.value());
+        }
+
+        None
     }
 }
 
