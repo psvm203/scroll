@@ -44,10 +44,10 @@ pub mod spec_collection {
     };
 
     pub const TRACE_REQUIRED: Spec = Spec {
-        label: "주문의 흔적 필요 갯수 (썬데이 미적용 기준)",
+        label: "주문의 흔적 필요 수 (썬데이 미적용 기준)",
         placeholder: "0",
         min: 0,
-        max: 10000,
+        max: 100000,
     };
 
     pub const TRACE_PRICE: Spec = Spec {
@@ -84,8 +84,10 @@ pub struct UpgradeContext {
     pub handicraft: Option<u32>,
     pub enhance_mastery: Option<u32>,
     pub upgrade_salvation: Option<u32>,
+    pub equipment_slot: Option<String>,
     pub equipment_level: Option<u32>,
     pub upgradeable_count: Option<u32>,
+    pub trace_probability: Option<u32>,
     pub trace_required: Option<u32>,
     pub trace_price: Option<u32>,
     pub innocent_scroll_price: Option<u32>,

@@ -2,6 +2,7 @@ use crate::utils::sycamore::{Callback, ViewVecExt};
 use crate::view_models::upgrade_context_view_model::{
     Spec, UpgradeContextViewModel, spec_collection,
 };
+use crate::models::traces;
 use sycamore::prelude::*;
 
 mod constants {
@@ -78,16 +79,18 @@ fn probability_fields() -> Vec<View> {
 fn equipment_fields() -> Vec<View> {
     let view_model = use_context::<UpgradeContextViewModel>();
 
+    let equipment_slot = view_model.equipment_slot();
     let equipment_level = view_model.get_field(|context| context.equipment_level);
     let upgradeable_count = view_model.get_field(|context| context.upgradeable_count);
     let trace_required = view_model.get_field(|context| context.trace_required);
 
+    let equipment_slot_callback = view_model.equipment_slot_change_callback();
     let equipment_level_callback = view_model.equipment_level_change_callback();
     let upgradeable_count_callback = view_model.upgradeable_count_change_callback();
-    let trace_required_callback = view_model.trace_required_change_callback();
 
     [
         EquipmentSearch(),
+        equipment_slot_field(equipment_slot, equipment_slot_callback),
         field(
             &spec_collection::EQUIPMENT_LEVEL,
             equipment_level,
@@ -100,11 +103,10 @@ fn equipment_fields() -> Vec<View> {
             upgradeable_count_callback,
             false,
         ),
-        field(
+        TraceProbabilityButtons(),
+        output_field(
             &spec_collection::TRACE_REQUIRED,
             trace_required,
-            trace_required_callback,
-            false,
         ),
     ]
     .into_iter()
@@ -168,6 +170,60 @@ fn price_fields() -> Vec<View> {
     .into_iter()
     .collect::<Vec<View>>()
     .join(|| view! { div(class="divider") })
+}
+
+fn equipment_slot_field(value: Option<String>, callback: Callback) -> View {
+    let selected_weapon = value.as_deref() == Some(traces::EQUIPMENT_SLOT_WEAPON);
+    let selected_armor = value.as_deref() == Some(traces::EQUIPMENT_SLOT_ARMOR);
+    let selected_glove = value.as_deref() == Some(traces::EQUIPMENT_SLOT_GLOVE);
+    let selected_accessory = value.as_deref() == Some(traces::EQUIPMENT_SLOT_ACCESSORY);
+    let selected_heart = value.as_deref() == Some(traces::EQUIPMENT_SLOT_HEART);
+    let selected_default = value.is_none();
+
+    view! {
+        label(class="label") { "장비 슬롯" }
+        select(class="select w-full", on:change=callback) {
+            option(value="", selected=selected_default, disabled=true) { "장비 슬롯 선택" }
+            option(value=traces::EQUIPMENT_SLOT_WEAPON, selected=selected_weapon) { "무기" }
+            option(value=traces::EQUIPMENT_SLOT_ARMOR, selected=selected_armor) { "방어구" }
+            option(value=traces::EQUIPMENT_SLOT_GLOVE, selected=selected_glove) { "장갑" }
+            option(value=traces::EQUIPMENT_SLOT_ACCESSORY, selected=selected_accessory) { "장신구" }
+            option(value=traces::EQUIPMENT_SLOT_HEART, selected=selected_heart) { "하트" }
+        }
+    }
+}
+
+#[component]
+fn TraceProbabilityButtons() -> View {
+    let view_model = use_context::<UpgradeContextViewModel>();
+    let selected_probability = view_model.trace_probability();
+    let probabilities = [100_u32, 70_u32, 30_u32, 15_u32];
+
+    view! {
+        div(class="space-y-2") {
+            label(class="label") { "주문의 흔적 확률" }
+            div(class="flex flex-wrap gap-2") {
+                (probabilities
+                    .into_iter()
+                    .map(|probability| {
+                        let onclick = view_model.trace_probability_change_callback(probability);
+                        let is_selected = selected_probability == Some(probability);
+                        let class = if is_selected { "btn btn-sm btn-primary" } else { "btn btn-sm btn-outline" };
+
+                        view! {
+                            button(
+                                r#type="button",
+                                class=class,
+                                on:click=onclick
+                            ) {
+                                (format!("{probability}%"))
+                            }
+                        }
+                    })
+                    .collect::<Vec<View>>())
+            }
+        }
+    }
 }
 
 #[component]
@@ -265,6 +321,29 @@ fn field(spec: &Spec, value: Option<String>, callback: Callback, disabled: bool)
             max=max,
             on:change=callback,
             disabled=disabled
+        ) {}
+    }
+}
+
+fn output_field(spec: &Spec, value: Option<String>) -> View {
+    let label = spec.label;
+    let placeholder = spec.placeholder;
+    let min = spec.min.to_string();
+    let max = spec.max.to_string();
+
+    view! {
+        label(class="label", r#for=label) { (label) }
+        input(
+            r#type="number",
+            id=label,
+            class="input validator w-full",
+            required=true,
+            placeholder=placeholder,
+            value=value,
+            min=min,
+            max=max,
+            readonly=true,
+            disabled=true
         ) {}
     }
 }

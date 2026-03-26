@@ -3,7 +3,7 @@ pub use crate::models::upgrade_context::{
     spec_collection::{self, Spec},
 };
 use crate::{
-    models::{equipments, upgrade_context},
+    models::{equipments, traces, upgrade_context},
     utils::{
         api,
         sycamore::{Callback, EventParser, EventValue},
@@ -25,17 +25,21 @@ pub struct UpgradeContextViewModel {
     pub current_upgrade_context: Signal<UpgradeContext>,
     pub is_loading: Signal<bool>,
     pub api_error_message: Signal<Option<String>>,
+    pub selected_trace_probability: Signal<Option<u32>>,
 }
 
 impl UpgradeContextViewModel {
     pub fn new() -> Self {
-        let stored_upgrade_context: UpgradeContext =
+        let mut stored_upgrade_context: UpgradeContext =
             LocalStorage::get(constants::UPGRADE_CONTEXT_STORAGE_KEY).unwrap_or_default();
+        Self::refresh_trace_required(&mut stored_upgrade_context);
+        let selected_trace_probability = stored_upgrade_context.trace_probability;
 
         Self {
             current_upgrade_context: create_signal(stored_upgrade_context),
             is_loading: create_signal(false),
             api_error_message: create_signal(None),
+            selected_trace_probability: create_signal(selected_trace_probability),
         }
     }
 
@@ -78,14 +82,18 @@ impl UpgradeContextViewModel {
 
     pub fn equipment_search_callback(&self) -> Callback {
         let current_upgrade_context = self.current_upgrade_context;
+        let selected_trace_probability = self.selected_trace_probability;
 
         Callback::from(move |event: Event| {
             if let Some(query) = event.value()
                 && let Some(equipment) = equipments::find_by_name_or_alias(&query)
             {
                 let mut upgrade_context = current_upgrade_context.get_clone_untracked();
+                upgrade_context.equipment_slot = Some(equipment.slot.to_owned());
                 upgrade_context.equipment_level = Some(equipment.level);
                 upgrade_context.upgradeable_count = Some(equipment.count);
+                selected_trace_probability.set(upgrade_context.trace_probability);
+                Self::refresh_trace_required(&mut upgrade_context);
                 current_upgrade_context.set(upgrade_context.clone());
                 Self::persist_upgrade_context(&upgrade_context);
             }
@@ -132,6 +140,7 @@ impl UpgradeContextViewModel {
             {
                 let mut upgrade_context = current_upgrade_context.get_clone_untracked();
                 field_setter(&mut upgrade_context, Some(value));
+                Self::refresh_trace_required(&mut upgrade_context);
                 current_upgrade_context.set(upgrade_context.clone());
                 Self::persist_upgrade_context(&upgrade_context);
             }
@@ -172,15 +181,40 @@ impl UpgradeContextViewModel {
         })
     }
 
+    pub fn equipment_slot_change_callback(&self) -> Callback {
+        let current_upgrade_context = self.current_upgrade_context;
+
+        Callback::from(move |event: Event| {
+            if let Some(equipment_slot) = event.value() {
+                let mut upgrade_context = current_upgrade_context.get_clone_untracked();
+                upgrade_context.equipment_slot = match equipment_slot.as_str() {
+                    _ if traces::is_supported_equipment_slot(&equipment_slot) => Some(equipment_slot),
+                    _ => None,
+                };
+                Self::refresh_trace_required(&mut upgrade_context);
+                current_upgrade_context.set(upgrade_context.clone());
+                Self::persist_upgrade_context(&upgrade_context);
+            }
+        })
+    }
+
     pub fn upgradeable_count_change_callback(&self) -> Callback {
         self.create_callback(&spec_collection::UPGRADEABLE_COUNT, |context, value| {
             context.upgradeable_count = value;
         })
     }
 
-    pub fn trace_required_change_callback(&self) -> Callback {
-        self.create_callback(&spec_collection::TRACE_REQUIRED, |context, value| {
-            context.trace_required = value;
+    pub fn trace_probability_change_callback(&self, probability: u32) -> Callback {
+        let current_upgrade_context = self.current_upgrade_context;
+        let selected_trace_probability = self.selected_trace_probability;
+
+        Callback::from(move |_event: Event| {
+            let mut upgrade_context = current_upgrade_context.get_clone_untracked();
+            upgrade_context.trace_probability = Some(probability);
+            Self::refresh_trace_required(&mut upgrade_context);
+            current_upgrade_context.set(upgrade_context.clone());
+            selected_trace_probability.set(Some(probability));
+            Self::persist_upgrade_context(&upgrade_context);
         })
     }
 
@@ -188,6 +222,16 @@ impl UpgradeContextViewModel {
         self.create_callback(&spec_collection::TRACE_PRICE, |context, value| {
             context.trace_price = value;
         })
+    }
+
+    pub fn trace_probability(&self) -> Option<u32> {
+        self.selected_trace_probability.get_clone()
+    }
+
+    pub fn equipment_slot(&self) -> Option<String> {
+        self.current_upgrade_context
+            .get_clone_untracked()
+            .equipment_slot
     }
 
     pub fn innocent_scroll_price_change_callback(&self) -> Callback {
@@ -266,5 +310,31 @@ impl UpgradeContextViewModel {
         web_sys::console::error_1(&JsValue::from_str(&format!(
             "failed to fetch probability context: {error:?}"
         )));
+    }
+
+    fn refresh_trace_required(upgrade_context: &mut UpgradeContext) {
+        let Some(equipment_slot) = upgrade_context.equipment_slot.as_deref() else {
+            upgrade_context.trace_required = None;
+            return;
+        };
+        let Some(equipment_level) = upgrade_context.equipment_level else {
+            upgrade_context.trace_required = None;
+            return;
+        };
+        let Some(upgradeable_count) = upgrade_context.upgradeable_count else {
+            upgrade_context.trace_required = None;
+            return;
+        };
+        let Some(trace_probability) = upgrade_context.trace_probability else {
+            upgrade_context.trace_required = None;
+            return;
+        };
+
+        upgrade_context.trace_required = traces::calculate_total_trace_required(
+            equipment_slot,
+            equipment_level,
+            upgradeable_count,
+            trace_probability,
+        );
     }
 }
