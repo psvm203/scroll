@@ -124,20 +124,19 @@ fn equipment_fields() -> Vec<View> {
 
 #[component]
 fn FeverTimeToggle() -> View {
-    let enabled = create_signal(false);
-    let onclick = move |_event| {
-        enabled.set(!enabled.get_clone_untracked());
-    };
+    let view_model = use_context::<UpgradeContextViewModel>();
+    let enabled = view_model.is_fever_time();
+    let onclick = view_model.toggle_fever_time_callback();
 
     view! {
         div(class="flex items-center justify-between") {
             label(class="label p-0") { "피버타임" }
             button(
                 r#type="button",
-                class=if enabled.get() { "btn btn-sm btn-primary" } else { "btn btn-sm btn-outline" },
+                class=if enabled { "btn btn-sm btn-primary" } else { "btn btn-sm btn-outline" },
                 on:click=onclick
             ) {
-                (if enabled.get() { "ON" } else { "OFF" })
+                (if enabled { "ON" } else { "OFF" })
             }
         }
     }
@@ -275,6 +274,7 @@ fn equipment_slot_field(value: Option<String>, callback: Callback) -> View {
 fn TraceProbabilityButtons() -> View {
     let view_model = use_context::<UpgradeContextViewModel>();
     let selected_probability = view_model.trace_probability();
+    let actual_probability_text = view_model.actual_trace_probability_text();
     let probabilities = [100_u32, 70_u32, 30_u32, 15_u32];
 
     view! {
@@ -300,6 +300,7 @@ fn TraceProbabilityButtons() -> View {
                     })
                     .collect::<Vec<View>>())
             }
+            p(class="text-sm text-info font-semibold mt-1") { (actual_probability_text) }
         }
     }
 }

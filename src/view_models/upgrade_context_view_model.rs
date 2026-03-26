@@ -254,6 +254,21 @@ impl UpgradeContextViewModel {
         self.selected_trace_probability.get_clone()
     }
 
+    pub fn is_fever_time(&self) -> bool {
+        self.current_upgrade_context.get_clone_untracked().is_fever_time
+    }
+
+    pub fn toggle_fever_time_callback(&self) -> Callback {
+        let current_upgrade_context = self.current_upgrade_context;
+
+        Callback::from(move |_event: Event| {
+            let mut upgrade_context = current_upgrade_context.get_clone_untracked();
+            upgrade_context.is_fever_time = !upgrade_context.is_fever_time;
+            current_upgrade_context.set(upgrade_context.clone());
+            Self::persist_upgrade_context(&upgrade_context);
+        })
+    }
+
     pub fn is_trace_half_price(&self) -> bool {
         self.current_upgrade_context
             .get_clone_untracked()
@@ -276,6 +291,42 @@ impl UpgradeContextViewModel {
         self.current_upgrade_context
             .get_clone_untracked()
             .equipment_slot
+    }
+
+    pub fn actual_trace_probability_text(&self) -> String {
+        let upgrade_context = self.current_upgrade_context.get_clone_untracked();
+        let Some(base_probability) = upgrade_context.trace_probability else {
+            return "실제 확률: -".to_owned();
+        };
+
+        let fever_adjusted_probability = if upgrade_context.is_fever_time {
+            match base_probability {
+                70 => 95.0,
+                30 => 45.0,
+                15 => 25.0,
+                _ => f64::from(base_probability),
+            }
+        } else {
+            f64::from(base_probability)
+        };
+
+        let handicraft_bonus = upgrade_context
+            .handicraft
+            .map_or(0.0, upgrade_context::handicraft_probability_bonus);
+        let enhance_mastery_bonus = upgrade_context
+            .enhance_mastery
+            .map_or(0.0, upgrade_context::enhance_mastery_probability_bonus);
+
+        let final_probability =
+            (fever_adjusted_probability + handicraft_bonus + enhance_mastery_bonus).min(100.0);
+
+        let probability_text = if (final_probability.fract() - 0.0).abs() < f64::EPSILON {
+            format!("{final_probability:.0}")
+        } else {
+            format!("{final_probability:.1}")
+        };
+
+        format!("실제 확률: {probability_text}%")
     }
 
     pub fn innocent_scroll_price_change_callback(&self) -> Callback {

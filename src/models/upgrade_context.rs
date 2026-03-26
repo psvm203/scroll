@@ -84,6 +84,7 @@ pub struct UpgradeContext {
     pub handicraft: Option<u32>,
     pub enhance_mastery: Option<u32>,
     pub upgrade_salvation: Option<u32>,
+    pub is_fever_time: bool,
     pub is_trace_half_price: bool,
     pub equipment_slot: Option<String>,
     pub equipment_level: Option<u32>,
@@ -98,7 +99,10 @@ pub struct UpgradeContext {
 }
 
 pub fn handicraft_tooltip(handicraft_level: u32) -> String {
-    format!("성공 확률 {}%p 증가", f64::from(handicraft_level / 5 * 5) / 10.0)
+    format!(
+        "성공 확률 {}%p 증가",
+        handicraft_probability_bonus(handicraft_level)
+    )
 }
 
 pub fn enhance_mastery_tooltip(enhance_mastery_level: u32) -> String {
@@ -111,4 +115,12 @@ pub fn upgrade_salvation_tooltip(upgrade_salvation_level: u32) -> String {
 
 pub fn trace_price_tooltip(trace_price: u32) -> String {
     format!("{trace_price} 메소")
+}
+
+pub fn handicraft_probability_bonus(handicraft_level: u32) -> f64 {
+    f64::from(handicraft_level / 5 * 5) / 10.0
+}
+
+pub fn enhance_mastery_probability_bonus(enhance_mastery_level: u32) -> f64 {
+    f64::from(enhance_mastery_level)
 }
