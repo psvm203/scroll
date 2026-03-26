@@ -63,14 +63,14 @@ fn probability_fields() -> Vec<View> {
             (field(&spec_collection::HANDICRAFT, handicraft.clone(), handicraft_callback.clone(), disable_probability_inputs))
             (handicraft_tooltip)
         },
-        view! {
+        view! { div(class="mt-4") {
             (field(&spec_collection::ENHANCE_MASTERY, enhance_mastery.clone(), enhance_mastery_callback.clone(), disable_probability_inputs))
             (enhance_mastery_tooltip)
-        },
-        view! {
+        }},
+        view! { div(class="mt-4") {
             (field(&spec_collection::UPGRADE_SALVATION, upgrade_salvation.clone(), upgrade_salvation_callback.clone(), disable_probability_inputs))
             (upgrade_salvation_tooltip)
-        },
+        }},
     ]
 }
 
