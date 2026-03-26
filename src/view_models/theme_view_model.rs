@@ -3,6 +3,7 @@ use crate::utils::sycamore::Callback;
 use gloo_storage::{LocalStorage, Storage};
 use sycamore::prelude::*;
 use web_sys::Event;
+use web_sys::wasm_bindgen::JsValue;
 
 mod constants {
     pub const THEME_STORAGE_KEY: &str = "theme";
@@ -29,7 +30,12 @@ impl ThemeViewModel {
 
         Callback::from(move |_event: Event| {
             current_theme.set(theme_value.to_owned());
-            LocalStorage::set(constants::THEME_STORAGE_KEY, theme_value.to_owned()).unwrap();
+            if let Err(error) = LocalStorage::set(constants::THEME_STORAGE_KEY, theme_value.to_owned())
+            {
+                web_sys::console::error_1(&JsValue::from_str(&format!(
+                    "failed to persist theme: {error:?}"
+                )));
+            }
         })
     }
 }
