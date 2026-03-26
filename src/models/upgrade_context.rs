@@ -84,6 +84,7 @@ pub struct UpgradeContext {
     pub handicraft: Option<u32>,
     pub enhance_mastery: Option<u32>,
     pub upgrade_salvation: Option<u32>,
+    pub is_trace_half_price: bool,
     pub equipment_slot: Option<String>,
     pub equipment_level: Option<u32>,
     pub upgradeable_count: Option<u32>,

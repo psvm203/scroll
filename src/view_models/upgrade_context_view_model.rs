@@ -204,6 +204,26 @@ impl UpgradeContextViewModel {
         })
     }
 
+    pub fn trace_required_change_callback(&self) -> Callback {
+        let current_upgrade_context = self.current_upgrade_context;
+        let min = spec_collection::TRACE_REQUIRED.min;
+        let max = spec_collection::TRACE_REQUIRED.max;
+
+        Callback::from(move |event: Event| {
+            if let Some(value) = event.parse()
+                && (min..=max).contains(&value)
+            {
+                let mut upgrade_context = current_upgrade_context.get_clone_untracked();
+                upgrade_context.trace_required = Some(value);
+                upgrade_context.equipment_slot = None;
+                upgrade_context.equipment_level = None;
+                upgrade_context.upgradeable_count = None;
+                current_upgrade_context.set(upgrade_context.clone());
+                Self::persist_upgrade_context(&upgrade_context);
+            }
+        })
+    }
+
     pub fn trace_probability_change_callback(&self, probability: u32) -> Callback {
         let current_upgrade_context = self.current_upgrade_context;
         let selected_trace_probability = self.selected_trace_probability;
@@ -226,6 +246,23 @@ impl UpgradeContextViewModel {
 
     pub fn trace_probability(&self) -> Option<u32> {
         self.selected_trace_probability.get_clone()
+    }
+
+    pub fn is_trace_half_price(&self) -> bool {
+        self.current_upgrade_context
+            .get_clone_untracked()
+            .is_trace_half_price
+    }
+
+    pub fn toggle_trace_half_price_callback(&self) -> Callback {
+        let current_upgrade_context = self.current_upgrade_context;
+
+        Callback::from(move |_event: Event| {
+            let mut upgrade_context = current_upgrade_context.get_clone_untracked();
+            upgrade_context.is_trace_half_price = !upgrade_context.is_trace_half_price;
+            current_upgrade_context.set(upgrade_context.clone());
+            Self::persist_upgrade_context(&upgrade_context);
+        })
     }
 
     pub fn equipment_slot(&self) -> Option<String> {
