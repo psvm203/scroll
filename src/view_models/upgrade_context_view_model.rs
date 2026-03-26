@@ -3,7 +3,7 @@ pub use crate::models::upgrade_context::{
     spec_collection::{self, Spec},
 };
 use crate::{
-    models::upgrade_context,
+    models::{equipments, upgrade_context},
     utils::{
         api,
         sycamore::{Callback, EventParser, EventValue},
@@ -74,6 +74,26 @@ impl UpgradeContextViewModel {
                 });
             }
         })
+    }
+
+    pub fn equipment_search_callback(&self) -> Callback {
+        let current_upgrade_context = self.current_upgrade_context;
+
+        Callback::from(move |event: Event| {
+            if let Some(query) = event.value()
+                && let Some(equipment) = equipments::find_by_name_or_alias(&query)
+            {
+                let mut upgrade_context = current_upgrade_context.get_clone_untracked();
+                upgrade_context.equipment_level = Some(equipment.level);
+                upgrade_context.upgradeable_count = Some(equipment.count);
+                current_upgrade_context.set(upgrade_context.clone());
+                Self::persist_upgrade_context(&upgrade_context);
+            }
+        })
+    }
+
+    pub fn equipment_search_options(&self) -> Vec<&'static str> {
+        equipments::options()
     }
 
     async fn fetch_probability_context(

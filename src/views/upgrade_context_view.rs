@@ -8,6 +8,7 @@ mod constants {
     pub const POTENTIAL_LEGEND: &str = "확률 정보";
     pub const EQUIPMENT_LEGEND: &str = "장비 정보";
     pub const PRICE_LEGEND: &str = "시세 정보";
+    pub const EQUIPMENT_DATALIST_ID: &str = "equipment-options";
 }
 
 #[component]
@@ -86,6 +87,7 @@ fn equipment_fields() -> Vec<View> {
     let trace_required_callback = view_model.trace_required_change_callback();
 
     [
+        EquipmentSearch(),
         field(
             &spec_collection::EQUIPMENT_LEVEL,
             equipment_level,
@@ -166,6 +168,39 @@ fn price_fields() -> Vec<View> {
     .into_iter()
     .collect::<Vec<View>>()
     .join(|| view! { div(class="divider") })
+}
+
+#[component]
+fn EquipmentSearch() -> View {
+    let view_model = use_context::<UpgradeContextViewModel>();
+    let onchange = view_model.equipment_search_callback();
+    let options = view_model.equipment_search_options();
+
+    view! {
+        div(class="space-y-2") {
+            label(class="label") { "장비 검색" }
+            input(
+                r#type="text",
+                class="input w-full",
+                placeholder="장비 이름 검색",
+                list=constants::EQUIPMENT_DATALIST_ID,
+                on:change=onchange
+            ) {}
+            datalist(id=constants::EQUIPMENT_DATALIST_ID) {
+                (options
+                    .iter()
+                    .copied()
+                    .map(equipment_option)
+                    .collect::<Vec<View>>())
+            }
+        }
+    }
+}
+
+fn equipment_option(value: &'static str) -> View {
+    view! {
+        option(value=value) {}
+    }
 }
 
 #[component]
